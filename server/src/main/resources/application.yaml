@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: prostagma
+
+  ai:
+    ollama:
+      base-url: http://192.168.1.200:11434
+      chat:
+        options:
+          # model: llama3:8b
+          model: meltemi-en
+          temperature: 0.1
+
+  jackson:
+    parser:
+      allow-unescaped-control-chars: true
