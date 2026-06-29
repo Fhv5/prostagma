@@ -10,5 +10,7 @@ public record TranslationResponse(
     @JsonProperty("literal")
     String literal,
     @JsonProperty("interpreted")
-    String interpreted) 
+    String interpreted,
+    @JsonProperty("google")
+    String google) 
 {}
