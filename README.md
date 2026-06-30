@@ -1,4 +1,4 @@
-# Prostagme? (Πρόσταγμα;)
+# Prostagma? (Πρόσταγμα;)
 
 My favorite game of all time, Age of Mythology, inspired me to learn Greek. I've always heard that the best way to learn a new language is to "immerse" yourself in it; expose yourself to its vocabulary and sentence structure throughout your daily life.
 
