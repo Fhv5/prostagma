@@ -1,7 +1,9 @@
 import tkinter as tk
 import queue
 import threading
-from services.ocr_service import get_clipboard_text
+import keyboard
+import config
+from services.ocr_service import get_clipboard_text, set_tesseract_cmd
 from services.api_service import send_for_translation
 from services.audio_service import play_pronunciation
 
@@ -9,6 +11,7 @@ class ProstagmaOverlay:
     def __init__(self, root, shortcut_key):
         self.root = root
         self.shortcut_key = shortcut_key
+        keyboard.add_hotkey(self.shortcut_key, self.trigger_translation)
         self.message_queue = queue.Queue()
         
         # --- UI STATES ---
@@ -66,8 +69,14 @@ class ProstagmaOverlay:
         )
         self.btn_collapse.pack(side='right', padx=5)
 
-        self.btn_view = tk.Button(
+        self.btn_settings = tk.Button(
             self.header, text="⚙️", bg='#222222', fg='#ffffff', bd=0, 
+            activebackground='#444444', activeforeground='#ffffff', command=self._open_settings, cursor="hand2"
+        )
+        self.btn_settings.pack(side='right', padx=5)
+
+        self.btn_view = tk.Button(
+            self.header, text="↕️", bg='#222222', fg='#ffffff', bd=0, 
             activebackground='#444444', activeforeground='#ffffff', command=self._toggle_view, cursor="hand2"
         )
         self.btn_view.pack(side='right', padx=5)
@@ -94,8 +103,7 @@ class ProstagmaOverlay:
         )
         self.btn_audio_slow.pack(side='top', pady=(2, 0), fill='x', expand=True)
 
-        # TEXT AREA (100% Selectable, 0% Draggable)
-        # cursor="xterm" added to indicate selectable text
+        # TEXT AREA
         self.label = tk.Text(
             self.content_frame, font=('Helvetica', 14, 'bold'), fg='#ffffff', bg='#111111',
             bd=0, relief="flat", wrap="word", selectbackground="#445566", selectforeground="#ffffff",
@@ -126,6 +134,53 @@ class ProstagmaOverlay:
         if not self.is_collapsed:
             target_height = self.height_minimal if self.is_minimal else self.height_detailed
             self.root.geometry(f"{self.width}x{target_height}")
+
+    # --- SETTINGS MODAL ---
+    def _open_settings(self):
+        settings_win = tk.Toplevel(self.root)
+        settings_win.title("Prostagma Settings")
+        settings_win.geometry("450x250")
+        settings_win.configure(bg='#222222')
+        settings_win.attributes('-topmost', True)
+
+        tk.Label(settings_win, text="Backend URL:", bg='#222222', fg='#ffffff').pack(anchor='w', padx=10, pady=(10, 0))
+        url_var = tk.StringVar(value=config.URL_BACKEND)
+        tk.Entry(settings_win, textvariable=url_var, width=50).pack(padx=10, pady=2)
+
+        tk.Label(settings_win, text="Shortcut Key (e.g., ctrl+shift+a):", bg='#222222', fg='#ffffff').pack(anchor='w', padx=10, pady=(10, 0))
+        shortcut_var = tk.StringVar(value=config.SHORTCUT_KEY)
+        tk.Entry(settings_win, textvariable=shortcut_var, width=50).pack(padx=10, pady=2)
+
+        tk.Label(settings_win, text="Tesseract OCR Path:", bg='#222222', fg='#ffffff').pack(anchor='w', padx=10, pady=(10, 0))
+        tesseract_var = tk.StringVar(value=config.TESSERACT_CMD)
+        tk.Entry(settings_win, textvariable=tesseract_var, width=50).pack(padx=10, pady=2)
+
+        def save_and_close():
+            new_url = url_var.get().strip()
+            new_shortcut = shortcut_var.get().strip()
+            new_tesseract = tesseract_var.get().strip()
+
+            config.save_config(new_url, new_shortcut, new_tesseract)
+            set_tesseract_cmd(new_tesseract)
+            
+            # Rebind hotkey
+            try:
+                keyboard.remove_hotkey(self.shortcut_key)
+            except Exception:
+                pass
+            
+            self.shortcut_key = new_shortcut
+            try:
+                keyboard.add_hotkey(self.shortcut_key, self.trigger_translation)
+                self.current_state = f"Ready. Use Win+Shift+S and then {self.shortcut_key.upper()}"
+                self._render_text()
+            except Exception as e:
+                self.message_queue.put(("error", f"Failed to bind hotkey: {e}"))
+                
+            settings_win.destroy()
+
+        tk.Button(settings_win, text="Save", command=save_and_close, bg='#44aa44', fg='#ffffff', width=15).pack(pady=20)
+
 
     # --- COLLAPSE LOGIC ---
     def _toggle_collapse(self, force_expand=False):

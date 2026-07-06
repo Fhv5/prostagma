@@ -4,6 +4,9 @@ from config import TESSERACT_CMD
 
 pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
 
+def set_tesseract_cmd(cmd_path: str):
+    pytesseract.pytesseract.tesseract_cmd = cmd_path
+
 def get_clipboard_text() -> str:
     screenshot = ImageGrab.grabclipboard()
     

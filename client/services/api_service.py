@@ -1,9 +1,9 @@
 import requests
-from config import URL_BACKEND
+import config
 
 def send_for_translation(text: str) -> dict:
     payload = {"text": text}
-    response = requests.post(URL_BACKEND, json=payload, timeout=180)
+    response = requests.post(config.URL_BACKEND, json=payload, timeout=180)
     
     if response.status_code == 200:
         return response.json()
