@@ -27,5 +27,3 @@ mvn spring-boot:run
 ```bash
 python client/main.py
 ```
-
-And so, I decided to 
