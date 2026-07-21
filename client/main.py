@@ -9,6 +9,4 @@ if __name__ == "__main__":
     root = tk.Tk()
     overlay = ProstagmaOverlay(root, SHORTCUT_KEY)
     
-    keyboard.add_hotkey(SHORTCUT_KEY, overlay.trigger_translation)
-    
     root.mainloop()
